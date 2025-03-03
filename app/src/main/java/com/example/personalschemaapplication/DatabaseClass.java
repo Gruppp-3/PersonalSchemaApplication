@@ -47,12 +47,12 @@ public class DatabaseClass extends SQLiteOpenHelper {
 
     public Cursor MySchedule() {
         SQLiteDatabase db = this.getReadableDatabase();
-        return db.rawQuery("SELECT full_name, date, time FROM personal WHERE full_name = 'Jonathan Shahi'", null);
+        return db.rawQuery("SELECT full_name, date, time FROM personal WHERE full_name = 'Omran Suleiman'", null);
     }
 
     public Cursor OtherShifts() {
         SQLiteDatabase db = this.getReadableDatabase();
-        return db.rawQuery("SELECT full_name, date, time FROM personal WHERE full_name != 'Jonathan Shahi'", null);
+        return db.rawQuery("SELECT full_name, date, time FROM personal WHERE full_name != 'Omran Suleiman'", null);
     }
 
     public Cursor getShiftsForDate(String date) {
