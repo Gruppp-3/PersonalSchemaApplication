@@ -8,15 +8,23 @@ import android.database.sqlite.SQLiteOpenHelper;
 
 public class DatabaseClass extends SQLiteOpenHelper {
 
-    private static final String dbname = "RestaurantDB";
+    private static final String DATABASE_NAME = "RestaurantDB";
+    private static final int DATABASE_VERSION = 1;
+
     public DatabaseClass(Context context) {
-        super(context, dbname, null, 1);
+        super(context, DATABASE_NAME, null, DATABASE_VERSION);
     }
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-        String qry = "CREATE TABLE personal (Employee_nr INTEGER PRIMARY KEY AUTOINCREMENT, full_name TEXT, date TEXT, time TEXT, shift TEXT)";
-        db.execSQL(qry);
+        String createTableQuery = "CREATE TABLE personal (" +
+                "Employee_nr INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                "full_name TEXT, " +
+                "date TEXT, " +
+                "time TEXT, " +
+                "shift TEXT" +
+                ")";
+        db.execSQL(createTableQuery);
     }
 
     @Override
@@ -25,7 +33,8 @@ public class DatabaseClass extends SQLiteOpenHelper {
         onCreate(db);
     }
 
-    public String addrecord(String f_name, String l_name, String date, String time, String shift) {
+    // Lägger till eller uppdaterar ett schema baserat på datum och tid
+    public String addRecord(String f_name, String l_name, String date, String time, String shift) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues cv = new ContentValues();
         cv.put("full_name", f_name + " " + l_name);
@@ -33,30 +42,41 @@ public class DatabaseClass extends SQLiteOpenHelper {
         cv.put("time", time);
         cv.put("shift", shift);
 
-        Cursor cursor = db.query("personal", new String[] { "full_name" }, "date=? AND time=?", new String[] { date, time }, null, null, null);
-        if (cursor.moveToFirst()) {
-            int res = db.update("personal", cv, "date=? AND time=?", new String[] { date, time });
-            cursor.close();
-            return res > 0 ? "Success" : "Failed";
-        } else {
-            cursor.close();
-            long res = db.insert("personal", null, cv);
-            return res != -1 ? "Success" : "Failed";
+        // Kontrollera om ett schema redan finns för samma datum och tid
+        try (Cursor cursor = db.query("personal", new String[]{"full_name"}, "date=? AND time=?", new String[]{date, time}, null, null, null)) {
+            if (cursor.moveToFirst()) {
+                int res = db.update("personal", cv, "date=? AND time=?", new String[]{date, time});
+                return res > 0 ? "Success" : "Failed";
+            } else {
+                long res = db.insert("personal", null, cv);
+                return res != -1 ? "Success" : "Failed";
+            }
         }
     }
 
-    public Cursor MySchedule() {
+    // Verifierar att ett givet Employee_nr (ID) finns i databasen
+    public boolean verifyEmployeeId(String id) {
         SQLiteDatabase db = this.getReadableDatabase();
-        return db.rawQuery("SELECT full_name, date, time FROM personal WHERE full_name = 'Omran Suleiman'", null);
+        try (Cursor cursor = db.query("personal", new String[]{"Employee_nr"}, "Employee_nr=?", new String[]{id}, null, null, null)) {
+            return cursor.moveToFirst();
+        }
     }
 
-    public Cursor OtherShifts() {
+    // Hämtar schemat för den inloggade användaren baserat på Employee_nr
+    public Cursor mySchedule(String employeeId) {
         SQLiteDatabase db = this.getReadableDatabase();
-        return db.rawQuery("SELECT full_name, date, time FROM personal WHERE full_name != 'Omran Suleiman'", null);
+        return db.rawQuery("SELECT full_name, date, time FROM personal WHERE Employee_nr = ?", new String[]{employeeId});
     }
 
+    // Hämtar andras scheman, dvs de vars Employee_nr inte matchar den inloggade användarens ID
+    public Cursor otherShifts(String employeeId) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        return db.rawQuery("SELECT full_name, date, time FROM personal WHERE Employee_nr != ?", new String[]{employeeId});
+    }
+
+    // Hämtar alla scheman för ett visst datum
     public Cursor getShiftsForDate(String date) {
         SQLiteDatabase db = this.getReadableDatabase();
-        return db.query("personal", new String[] { "full_name", "date", "time" }, "date=?", new String[] { date }, null, null, null);
+        return db.query("personal", new String[]{"full_name", "date", "time"}, "date=?", new String[]{date}, null, null, null);
     }
 }

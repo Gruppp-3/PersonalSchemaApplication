@@ -20,12 +20,14 @@ public class HomePage extends AppCompatActivity {
 
     RecyclerView recyclerViewSchedule, recyclerViewOtherShifts;
     DatabaseClass dh;
+    String employeeId;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home_page);
 
+        // Hämta referenser till RecyclerViews
         recyclerViewSchedule = findViewById(R.id.recyclerViewSchedule);
         recyclerViewOtherShifts = findViewById(R.id.recyclerViewOtherShifts);
 
@@ -33,10 +35,20 @@ public class HomePage extends AppCompatActivity {
         recyclerViewSchedule.setLayoutManager(new LinearLayoutManager(this));
         recyclerViewOtherShifts.setLayoutManager(new LinearLayoutManager(this));
 
-        dh = new DatabaseClass(this);
-        populateMySchedule();
-        populateOtherShifts();
+        // Hämta inloggat employeeId från Intent
+        employeeId = getIntent().getStringExtra("employee_id");
+        if (employeeId == null) {
 
+            finish();
+            return;
+        }
+
+        // Initiera databasen
+        dh = new DatabaseClass(this);
+        populateMySchedule(employeeId);
+        populateOtherShifts(employeeId);
+
+        // Konfigurera bottennavigering
         BottomNavigationView navView = findViewById(R.id.nav_view);
         navView.setOnNavigationItemSelectedListener(new BottomNavigationView.OnNavigationItemSelectedListener(){
             @Override
@@ -47,47 +59,51 @@ public class HomePage extends AppCompatActivity {
                 } else if (itemId == R.id.navigation_calender) {
                     startActivity(new Intent(HomePage.this, Calender.class));
                     return true;
-                } else if (itemId == R.id.navigation_logout) {
-                    startActivity(new Intent(HomePage.this, Login.class));
-                    return true;
                 }
                 return false;
             }
         });
     }
 
-    private void populateMySchedule() {
-        Cursor cursor = dh.MySchedule();
+    // Metod för att hämta det inloggade användarens schema
+    private void populateMySchedule(String employeeId) {
+        Cursor cursor = dh.mySchedule(employeeId);
         List<String> scheduleList = new ArrayList<>();
 
-        while (cursor.moveToNext()) {
-            String fullName = cursor.getString(cursor.getColumnIndex("full_name"));
-            String date = cursor.getString(cursor.getColumnIndex("date"));
-            String time = cursor.getString(cursor.getColumnIndex("time"));
-            scheduleList.add(fullName + ", " + date + " " + time);
+        if (cursor != null) {
+            while (cursor.moveToNext()) {
+                String fullName = cursor.getString(cursor.getColumnIndex("full_name"));
+                String date = cursor.getString(cursor.getColumnIndex("date"));
+                String time = cursor.getString(cursor.getColumnIndex("time"));
+                scheduleList.add(fullName + ", " + date + " " + time);
+            }
+            cursor.close();
         }
-        cursor.close();
 
         SimpleStringAdapter adapter = new SimpleStringAdapter(scheduleList);
         recyclerViewSchedule.setAdapter(adapter);
     }
 
-    private void populateOtherShifts() {
-        Cursor cursor = dh.OtherShifts();
+    // Metod för att hämta andras scheman (alla poster med annat Employee_nr)
+    private void populateOtherShifts(String employeeId) {
+        Cursor cursor = dh.otherShifts(employeeId);
         List<String> scheduleList = new ArrayList<>();
 
-        while (cursor.moveToNext()) {
-            String fullName = cursor.getString(cursor.getColumnIndex("full_name"));
-            String date = cursor.getString(cursor.getColumnIndex("date"));
-            String time = cursor.getString(cursor.getColumnIndex("time"));
-            scheduleList.add(fullName + ", " + date + " " + time);
+        if (cursor != null) {
+            while (cursor.moveToNext()) {
+                String fullName = cursor.getString(cursor.getColumnIndex("full_name"));
+                String date = cursor.getString(cursor.getColumnIndex("date"));
+                String time = cursor.getString(cursor.getColumnIndex("time"));
+                scheduleList.add(fullName + ", " + date + " " + time);
+            }
+            cursor.close();
         }
-        cursor.close();
 
         SimpleStringAdapter adapter = new SimpleStringAdapter(scheduleList);
         recyclerViewOtherShifts.setAdapter(adapter);
     }
 
+    // Adapterklass för att visa en enkel lista med schemainformation
     public static class SimpleStringAdapter extends RecyclerView.Adapter<SimpleStringAdapter.ViewHolder> {
         private List<String> data;
 

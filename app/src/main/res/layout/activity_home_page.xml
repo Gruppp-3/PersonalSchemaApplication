@@ -4,9 +4,11 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
+    android:id="@+id/main"
     android:layout_height="match_parent"
-    tools:context=".MainActivity">
+    tools:context=".HomePage">
 
+    <!-- AppBar med MaterialToolbar -->
     <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -20,6 +22,7 @@
             app:popupTheme="@style/ThemeOverlay.MaterialComponents.Light" />
     </com.google.android.material.appbar.AppBarLayout>
 
+    <!-- Innehåll med NestedScrollView -->
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -31,6 +34,26 @@
             android:orientation="vertical"
             android:padding="16dp">
 
+            <!-- Logo och välkomsttext -->
+            <ImageView
+                android:id="@+id/logo"
+                android:layout_width="120dp"
+                android:layout_height="120dp"
+                android:layout_gravity="center_horizontal"
+                android:src="@drawable/logo"
+                android:contentDescription="@string/logo_desc"
+                android:layout_marginBottom="16dp" />
+
+            <TextView
+                android:id="@+id/welcomeText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Välkommen!"
+                android:textAppearance="@style/TextAppearance.MaterialComponents.Headline6"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginBottom="24dp"/>
+
+            <!-- Kort för "My Schedule" -->
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -59,11 +82,13 @@
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
+            <!-- Kort för "Other Shifts" -->
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 app:cardCornerRadius="12dp"
-                app:cardElevation="4dp">
+                app:cardElevation="4dp"
+                android:layout_marginBottom="16dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -86,9 +111,24 @@
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
+            <!-- Spacer för att trycka ner footern -->
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1" />
+
+            <!-- Footer -->
+            <TextView
+                android:id="@+id/footer"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="© 2025 Ditt Företag"
+                android:layout_gravity="center_horizontal"
+                android:padding="8dp"/>
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
 
+    <!-- Bottom Navigation -->
     <com.google.android.material.bottomnavigation.BottomNavigationView
         android:id="@+id/bottomNavigationView"
         android:layout_width="match_parent"

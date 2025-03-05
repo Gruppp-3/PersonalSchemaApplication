@@ -1,3 +1,5 @@
 <resources>
-    <string name="app_name">PersonalSchemaApplication</string>
+    <string name="app_name">Personal Schema Application</string>
+    <string name="logo_desc">Beskrivning av logotypen</string>
+    <!-- Andra strängar -->
 </resources>

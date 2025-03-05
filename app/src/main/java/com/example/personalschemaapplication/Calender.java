@@ -62,9 +62,6 @@ public class Calender extends AppCompatActivity {
                 } else if(itemId == R.id.navigation_calender) {
                     // Redan i denna aktivitet
                     return true;
-                } else if(itemId == R.id.navigation_logout) {
-                    startActivity(new Intent(Calender.this, Login.class));
-                    return true;
                 }
                 return false;
             }
@@ -142,9 +139,9 @@ public class Calender extends AppCompatActivity {
                                 public void onClick(DialogInterface dialog, int which) {
                                     // Exempel: välj tid baserat på positionen
                                     String selectedTime = position == 0 ? "11-17" : "17-21";
-                                    String result = new DatabaseClass(v.getContext())
-                                            .addrecord("Omran", "Suleiman", ((Calender)v.getContext()).selectedDate, selectedTime, "True");
-                                    Toast.makeText(v.getContext(), "Result: " + result, Toast.LENGTH_SHORT).show();
+                                    new DatabaseClass(v.getContext())
+                                            .addRecord("Omran", "Suleiman", ((Calender)v.getContext()).selectedDate, selectedTime, "True");
+                                    Toast.makeText(v.getContext(), "Result: " + "result", Toast.LENGTH_SHORT).show();
                                     if(v.getContext() instanceof Calender){
                                         ((Calender)v.getContext()).updateRecyclerViewForDate(((Calender)v.getContext()).selectedDate);
                                     }
