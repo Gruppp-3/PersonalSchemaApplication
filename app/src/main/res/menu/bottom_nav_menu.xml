@@ -11,4 +11,9 @@
         android:icon="@drawable/calender"
         android:title="Calender" />
 
+    <item
+        android:id="@+id/navigation_logout"
+        android:icon="@drawable/logout"
+        android:title="logout" />
+
 </menu>
