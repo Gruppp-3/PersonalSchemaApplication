@@ -1,5 +1,6 @@
 package com.example.personalschemaapplication;
 
+import android.annotation.SuppressLint;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.view.MenuItem;
@@ -27,7 +28,7 @@ public class HomePage extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home_page);
 
-        // Hämta referenser till RecyclerViews
+
         recyclerViewSchedule = findViewById(R.id.recyclerViewSchedule);
         recyclerViewOtherShifts = findViewById(R.id.recyclerViewOtherShifts);
 
@@ -72,9 +73,9 @@ public class HomePage extends AppCompatActivity {
 
         if (cursor != null) {
             while (cursor.moveToNext()) {
-                String fullName = cursor.getString(cursor.getColumnIndex("full_name"));
-                String date = cursor.getString(cursor.getColumnIndex("date"));
-                String time = cursor.getString(cursor.getColumnIndex("time"));
+                @SuppressLint("Range") String fullName = cursor.getString(cursor.getColumnIndex("full_name"));
+                @SuppressLint("Range") String date = cursor.getString(cursor.getColumnIndex("date"));
+                @SuppressLint("Range") String time = cursor.getString(cursor.getColumnIndex("time"));
                 scheduleList.add(fullName + ", " + date + " " + time);
             }
             cursor.close();
@@ -91,9 +92,9 @@ public class HomePage extends AppCompatActivity {
 
         if (cursor != null) {
             while (cursor.moveToNext()) {
-                String fullName = cursor.getString(cursor.getColumnIndex("full_name"));
-                String date = cursor.getString(cursor.getColumnIndex("date"));
-                String time = cursor.getString(cursor.getColumnIndex("time"));
+                @SuppressLint("Range") String fullName = cursor.getString(cursor.getColumnIndex("full_name"));
+                @SuppressLint("Range") String date = cursor.getString(cursor.getColumnIndex("date"));
+                @SuppressLint("Range") String time = cursor.getString(cursor.getColumnIndex("time"));
                 scheduleList.add(fullName + ", " + date + " " + time);
             }
             cursor.close();

@@ -58,4 +58,5 @@
         android:text="© 2025 Ditt Anton's Skafferi"
         android:layout_marginBottom="16dp" />
 
+
 </LinearLayout>
