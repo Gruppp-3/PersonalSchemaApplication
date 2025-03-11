@@ -19,7 +19,6 @@ import retrofit2.Callback;
 import retrofit2.Response;
 
 public class MainActivity extends AppCompatActivity {
-
     private EditText editTextId;
     private Button buttonLogin;
     private TextView welcomeMessage, footer;
@@ -41,10 +40,16 @@ public class MainActivity extends AppCompatActivity {
         buttonLogin.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                String employeeId = editTextId.getText().toString().trim();
+                String employeeIdStr = editTextId.getText().toString().trim();
 
-                if (!employeeId.isEmpty()) {
-                    verifyEmployeeId(employeeId);
+                if (!employeeIdStr.isEmpty()) {
+                    try {
+                        // Convert String to Long before calling API
+                        Long employeeId = Long.parseLong(employeeIdStr);
+                        verifyEmployeeId(employeeId, employeeIdStr);
+                    } catch (NumberFormatException e) {
+                        editTextId.setError("Ange ett giltigt numeriskt ID");
+                    }
                 } else {
                     editTextId.setError("Ange ditt ID");
                 }
@@ -53,18 +58,20 @@ public class MainActivity extends AppCompatActivity {
     }
 
     // Funktion för att verifiera anställd ID
-    private void verifyEmployeeId(String employeeId) {
+    private void verifyEmployeeId(Long employeeId, String employeeIdStr) {
         ApiService apiService = RetrofitClient.getInstance().getApi();
-        Call<Map<String, Object>> call = apiService.getEmployeeId(employeeId);
 
-        call.enqueue(new Callback<Map<String, Object>>() {
+        // Using verifyEmployeeId which should return a boolean
+        Call<Boolean> call = apiService.verifyEmployeeId(employeeId);
+
+        call.enqueue(new Callback<Boolean>() {
             @Override
-            public void onResponse(Call<Map<String, Object>> call, Response<Map<String, Object>> response) {
-                if (response.isSuccessful() && response.body() != null) {
+            public void onResponse(Call<Boolean> call, Response<Boolean> response) {
+                if (response.isSuccessful() && Boolean.TRUE.equals(response.body())) {
                     // Om ID är giltigt, gå vidare till HomePage
                     Toast.makeText(MainActivity.this, "Inloggning lyckades", Toast.LENGTH_SHORT).show();
                     Intent intent = new Intent(MainActivity.this, HomePage.class);
-                    intent.putExtra("employee_id", employeeId);
+                    intent.putExtra("employee_id", employeeIdStr);
                     startActivity(intent);
                     finish();  // Stäng MainActivity så användaren inte kan gå tillbaka
                 } else {
@@ -74,7 +81,7 @@ public class MainActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onFailure(Call<Map<String, Object>> call, Throwable t) {
+            public void onFailure(Call<Boolean> call, Throwable t) {
                 // Om nätverksanropet misslyckades
                 Toast.makeText(MainActivity.this, "Nätverksfel. Försök igen senare.", Toast.LENGTH_SHORT).show();
             }
