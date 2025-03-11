@@ -7,10 +7,11 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
-
+import java.util.List;
 import com.example.personalschemaapplication.api.ApiService;
 import com.example.personalschemaapplication.api.RetrofitClient;
-
+import com.example.personalschemaapplication.model.EmployeeAvailability;
+import java.util.ArrayList;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -36,45 +37,73 @@ public class LoginActivity extends AppCompatActivity {
             String idInput = editTextId.getText().toString().trim();
 
             if (!idInput.isEmpty()) {
+                long employeeId;
                 try {
-                    // Konvertera inmatningen till long
-                    long employeeId = Long.parseLong(idInput);
-                    // Anropa API-metoden för att verifiera ID med en long-parameter
-                    apiService.verifyEmployeeId(employeeId).enqueue(new Callback<Boolean>() {
-                        @Override
-                        public void onResponse(Call<Boolean> call, Response<Boolean> response) {
-                            if (response.isSuccessful() && response.body() != null) {
-                                boolean exists = response.body();
-                                if (exists) {
-                                    // Inloggning lyckades
-                                    Toast.makeText(LoginActivity.this, "Inloggning lyckades", Toast.LENGTH_SHORT).show();
-                                    Intent intent = new Intent(LoginActivity.this, HomePage.class);
-                                    intent.putExtra("employee_id", idInput);
-                                    startActivity(intent);
-                                    finish();
-                                } else {
-                                    // Ogiltigt ID
-                                    Toast.makeText(LoginActivity.this, "Ogiltigt ID", Toast.LENGTH_SHORT).show();
-                                }
-                            } else {
-                                // Serverproblem eller ogiltigt svar
-                                Toast.makeText(LoginActivity.this, "Fel vid inloggning, försök igen.", Toast.LENGTH_SHORT).show();
-                            }
-                        }
-
-                        @Override
-                        public void onFailure(Call<Boolean> call, Throwable t) {
-                            Log.e("LoginActivity", "Nätverksfel", t);
-                            Toast.makeText(LoginActivity.this, "Nätverksfel: " + t.getMessage(), Toast.LENGTH_SHORT).show();
-                        }
-                    });
+                    employeeId = Long.parseLong(idInput);  // Försök omvandla sträng till long
                 } catch (NumberFormatException e) {
+                    // Ogiltig siffra
                     editTextId.setError("Ange ett giltigt nummer");
+                    return;
                 }
+
+                // Anropa API-metod med long
+                apiService.verifyEmployeeId(employeeId).enqueue(new Callback<Boolean>() {
+                    @Override
+                    public void onResponse(Call<Boolean> call, Response<Boolean> response) {
+                        if (response.isSuccessful() && response.body() != null) {
+                            boolean exists = response.body();
+                            if (exists) {
+                                // Inloggning lyckades
+                                Toast.makeText(LoginActivity.this, "Inloggning lyckades", Toast.LENGTH_SHORT).show();
+
+                                // Hämta schema för den inloggade anställda
+                                apiService.getEmployeeAvailability(employeeId).enqueue(new Callback<List<EmployeeAvailability>>() {
+                                    @Override
+                                    public void onResponse(Call<List<EmployeeAvailability>> call,
+                                                           Response<List<EmployeeAvailability>> response) {
+                                        if (response.isSuccessful() && response.body() != null) {
+                                            List<EmployeeAvailability> availabilityList = response.body();
+                                            Log.d("LoginActivity", "Schema hämtat: " + availabilityList.size() + " poster");
+
+                                            Toast.makeText(LoginActivity.this, "Schema hämtat", Toast.LENGTH_SHORT).show();
+
+                                            // Starta annan aktivitet
+                                            Intent intent = new Intent(LoginActivity.this, HomePage.class);
+                                            // Skicka vidare employeeId och listan om du vill
+                                            intent.putExtra("employee_id", employeeId);
+                                            intent.putExtra("availability_list", new ArrayList<>(availabilityList));
+                                            startActivity(intent);
+                                            finish();
+                                        } else {
+                                            Log.e("LoginActivity", "Fel vid API-svar: " + response.message());
+                                            Toast.makeText(LoginActivity.this, "Fel vid hämtning av schema: " + response.message(), Toast.LENGTH_SHORT).show();
+                                        }
+                                    }
+
+                                    @Override
+                                    public void onFailure(Call<List<EmployeeAvailability>> call, Throwable t) {
+                                        Toast.makeText(LoginActivity.this, "Nätverksfel: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                                    }
+                                });
+                            } else {
+                                // Ogiltigt ID
+                                Toast.makeText(LoginActivity.this, "Ogiltigt ID", Toast.LENGTH_SHORT).show();
+                            }
+                        } else {
+                            // Serverproblem eller ogiltigt svar
+                            Toast.makeText(LoginActivity.this, "Fel vid inloggning, försök igen.", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Call<Boolean> call, Throwable t) {
+                        Log.e("LoginActivity", "Nätverksfel", t);
+                        Toast.makeText(LoginActivity.this, "Nätverksfel: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                    }
+                });
             } else {
                 editTextId.setError("Ange ditt ID");
             }
         });
-
     }
 }

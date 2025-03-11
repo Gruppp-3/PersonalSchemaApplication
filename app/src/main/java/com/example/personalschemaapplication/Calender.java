@@ -140,7 +140,7 @@ public class Calender extends AppCompatActivity {
                                     // Exempel: välj tid baserat på positionen
                                     String selectedTime = position == 0 ? "11-17" : "17-21";
                                     new DatabaseClass(v.getContext())
-                                            .addRecord("Omran", "Suleiman", ((Calender)v.getContext()).selectedDate, selectedTime, "True");
+                                            .addRecord(000216 ,"Omran", "Suleiman", ((Calender)v.getContext()).selectedDate, selectedTime, "True");
                                     Toast.makeText(v.getContext(), "Result: " + "result", Toast.LENGTH_SHORT).show();
                                     if(v.getContext() instanceof Calender){
                                         ((Calender)v.getContext()).updateRecyclerViewForDate(((Calender)v.getContext()).selectedDate);
