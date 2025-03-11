@@ -1,141 +1,110 @@
 package com.example.personalschemaapplication;
 
-import android.annotation.SuppressLint;
-import android.database.Cursor;
-import android.os.Bundle;
-import android.view.MenuItem;
 import android.content.Intent;
-import java.util.ArrayList;
-import java.util.List;
+import android.os.Bundle;
+import android.util.Log;
+import android.view.MenuItem;
+import android.widget.TextView;
+import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.recyclerview.widget.RecyclerView;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.TextView;
+import com.example.personalschemaapplication.api.ApiService;
+import com.example.personalschemaapplication.api.RetrofitClient;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
+import java.util.List;
+import java.util.Map;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class HomePage extends AppCompatActivity {
 
-    RecyclerView recyclerViewSchedule, recyclerViewOtherShifts;
-    DatabaseClass dh;
-    String employeeId;
+    private TextView scheduleTextView;
+    private String employeeId;
+    private BottomNavigationView bottomNavigationView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home_page);
 
-
-        recyclerViewSchedule = findViewById(R.id.recyclerViewSchedule);
-        recyclerViewOtherShifts = findViewById(R.id.recyclerViewOtherShifts);
-
-        // Sätt layout managers
-        recyclerViewSchedule.setLayoutManager(new LinearLayoutManager(this));
-        recyclerViewOtherShifts.setLayoutManager(new LinearLayoutManager(this));
-
-        // Hämta inloggat employeeId från Intent
+        // Hämta anställd ID från Intent
         employeeId = getIntent().getStringExtra("employee_id");
-        if (employeeId == null) {
 
-            finish();
-            return;
+        // Initiera TextView för att visa schemat
+        scheduleTextView = findViewById(R.id.scheduleTextView);
+
+        // Initiera BottomNavigationView
+        bottomNavigationView = findViewById(R.id.nav_view);
+        bottomNavigationView.setOnNavigationItemSelectedListener(this::onNavigationItemSelected);
+
+        // Hämta schemat för användaren
+        getEmployeeSchedule();
+    }
+
+    // Funktion för att hantera klickhändelser i BottomNavigationView
+    private boolean onNavigationItemSelected(@NonNull MenuItem item) {
+        int itemId = item.getItemId();
+        if (itemId == R.id.navigation_home) {
+            // Redan på HomePage, gör inget
+            return true;
+        } else if (itemId == R.id.navigation_calender) {
+            // Navigera till Calender-aktiviteten
+            Intent intent = new Intent(HomePage.this, Calender.class);
+            intent.putExtra("employee_id", employeeId);
+            startActivity(intent);
+            return true;
+        } else if (itemId == R.id.navigation_logout) {
+            // Navigera till Profile-aktiviteten
+            Intent intent = new Intent(HomePage.this, LoginActivity.class);
+            intent.putExtra("employee_id", employeeId);
+            startActivity(intent);
+            return true;
+        }
+        return false;
+    }
+
+    // Funktion för att hämta schemat
+    private void getEmployeeSchedule() {
+        // Konvertera employeeId (String) -> long
+        long idLong;
+        try {
+            idLong = Long.parseLong(employeeId);
+        } catch (NumberFormatException e) {
+            Toast.makeText(this, "Ogiltigt ID (ej en siffra)", Toast.LENGTH_SHORT).show();
+            return; // Avbryt om vi inte kan parsa
         }
 
-        // Initiera databasen
-        dh = new DatabaseClass(this);
-        populateMySchedule(employeeId);
-        populateOtherShifts(employeeId);
+        ApiService apiService = RetrofitClient.getInstance().getApi();
+        Call<List<Map<String, Object>>> call = apiService.getEmployeeSchedule(idLong);
 
-        // Konfigurera bottennavigering
-        BottomNavigationView navView = findViewById(R.id.nav_view);
-        navView.setOnNavigationItemSelectedListener(new BottomNavigationView.OnNavigationItemSelectedListener(){
+        call.enqueue(new Callback<List<Map<String, Object>>>() {
             @Override
-            public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-                int itemId = item.getItemId();
-                if (itemId == R.id.navigation_home) {
-                    return true;
-                } else if (itemId == R.id.navigation_calender) {
-                    startActivity(new Intent(HomePage.this, Calender.class));
-                    return true;
+            public void onResponse(Call<List<Map<String, Object>>> call,
+                                   Response<List<Map<String, Object>>> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    List<Map<String, Object>> schedule = response.body();
+                    // Bearbeta schemat (ex. visa i scheduleTextView)
+                    if (schedule.isEmpty()) {
+                        Toast.makeText(HomePage.this, "Inget schema hittades.", Toast.LENGTH_SHORT).show();
+                    } else {
+                        // Exempel på hur du kan skriva ut schemat i TextView
+                        StringBuilder sb = new StringBuilder();
+                        for (Map<String, Object> shift : schedule) {
+                            sb.append("Shift: ").append(shift.toString()).append("\n");
+                        }
+                        scheduleTextView.setText(sb.toString());
+                    }
+                } else {
+                    Toast.makeText(HomePage.this, "Kunde inte hämta schema", Toast.LENGTH_SHORT).show();
                 }
-                return false;
+            }
+
+            @Override
+            public void onFailure(Call<List<Map<String, Object>>> call, Throwable t) {
+                Toast.makeText(HomePage.this, "Nätverksfel. Försök igen senare.", Toast.LENGTH_SHORT).show();
             }
         });
     }
 
-    // Metod för att hämta det inloggade användarens schema
-    private void populateMySchedule(String employeeId) {
-        Cursor cursor = dh.mySchedule(employeeId);
-        List<String> scheduleList = new ArrayList<>();
-
-        if (cursor != null) {
-            while (cursor.moveToNext()) {
-                @SuppressLint("Range") String fullName = cursor.getString(cursor.getColumnIndex("full_name"));
-                @SuppressLint("Range") String date = cursor.getString(cursor.getColumnIndex("date"));
-                @SuppressLint("Range") String time = cursor.getString(cursor.getColumnIndex("time"));
-                scheduleList.add(fullName + ", " + date + " " + time);
-            }
-            cursor.close();
-        }
-
-        SimpleStringAdapter adapter = new SimpleStringAdapter(scheduleList);
-        recyclerViewSchedule.setAdapter(adapter);
-    }
-
-    // Metod för att hämta andras scheman (alla poster med annat Employee_nr)
-    private void populateOtherShifts(String employeeId) {
-        Cursor cursor = dh.otherShifts(employeeId);
-        List<String> scheduleList = new ArrayList<>();
-
-        if (cursor != null) {
-            while (cursor.moveToNext()) {
-                @SuppressLint("Range") String fullName = cursor.getString(cursor.getColumnIndex("full_name"));
-                @SuppressLint("Range") String date = cursor.getString(cursor.getColumnIndex("date"));
-                @SuppressLint("Range") String time = cursor.getString(cursor.getColumnIndex("time"));
-                scheduleList.add(fullName + ", " + date + " " + time);
-            }
-            cursor.close();
-        }
-
-        SimpleStringAdapter adapter = new SimpleStringAdapter(scheduleList);
-        recyclerViewOtherShifts.setAdapter(adapter);
-    }
-
-    // Adapterklass för att visa en enkel lista med schemainformation
-    public static class SimpleStringAdapter extends RecyclerView.Adapter<SimpleStringAdapter.ViewHolder> {
-        private List<String> data;
-
-        public SimpleStringAdapter(List<String> data) {
-            this.data = data;
-        }
-
-        public static class ViewHolder extends RecyclerView.ViewHolder {
-            public TextView textView;
-            public ViewHolder(View itemView) {
-                super(itemView);
-                textView = itemView.findViewById(android.R.id.text1);
-            }
-        }
-
-        @NonNull
-        @Override
-        public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-            View view = LayoutInflater.from(parent.getContext())
-                    .inflate(android.R.layout.simple_list_item_1, parent, false);
-            return new ViewHolder(view);
-        }
-
-        @Override
-        public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-            holder.textView.setText(data.get(position));
-        }
-
-        @Override
-        public int getItemCount() {
-            return data.size();
-        }
-    }
 }

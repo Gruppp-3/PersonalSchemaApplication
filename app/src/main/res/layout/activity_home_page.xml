@@ -8,21 +8,23 @@
     android:layout_height="match_parent"
     tools:context=".HomePage">
 
-    <!-- AppBar med MaterialToolbar -->
+    <!-- AppBar with MaterialToolbar and Green Background -->
     <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:theme="@style/ThemeOverlay.MaterialComponents.Dark.ActionBar">
+        android:background="#4CAF50"
+        android:elevation="0dp"> <!-- Ensure no elevation is blocking the background -->
 
         <com.google.android.material.appbar.MaterialToolbar
             android:id="@+id/topAppBar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
             app:title="My Schedule"
-            app:popupTheme="@style/ThemeOverlay.MaterialComponents.Light" />
+            app:popupTheme="@style/ThemeOverlay.MaterialComponents.Light"
+            android:background="#4CAF50" /> <!-- Explicitly set the toolbar background color -->
     </com.google.android.material.appbar.AppBarLayout>
 
-    <!-- Innehåll med NestedScrollView -->
+    <!-- Content with NestedScrollView -->
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -32,9 +34,10 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
+            android:layout_marginTop="30dp"
             android:padding="16dp">
 
-            <!-- Logo och välkomsttext -->
+            <!-- Logo and Welcome Text -->
             <ImageView
                 android:id="@+id/logo"
                 android:layout_width="120dp"
@@ -53,7 +56,7 @@
                 android:layout_gravity="center_horizontal"
                 android:layout_marginBottom="24dp"/>
 
-            <!-- Kort för "My Schedule" -->
+            <!-- Card for "My Schedule" -->
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -74,6 +77,15 @@
                         android:textAppearance="@style/TextAppearance.MaterialComponents.Headline6"
                         android:paddingBottom="8dp"/>
 
+                    <!-- This is the TextView for displaying the schedule -->
+                    <TextView
+                        android:id="@+id/scheduleTextView"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Loading schedule..."
+                        android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"
+                        android:paddingBottom="8dp"/>
+
                     <androidx.recyclerview.widget.RecyclerView
                         android:id="@+id/recyclerViewSchedule"
                         android:layout_width="match_parent"
@@ -82,7 +94,7 @@
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
-            <!-- Kort för "Other Shifts" -->
+            <!-- Card for "Other Shifts" -->
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -111,7 +123,7 @@
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
-            <!-- Spacer för att trycka ner footern -->
+            <!-- Spacer to push footer down -->
             <View
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
@@ -136,6 +148,6 @@
         android:layout_alignParentBottom="true"
         android:background="?android:attr/windowBackground"
         app:itemIconTint="@android:color/white"
-        app:itemTextColor="@android:color/white"/>
-
+        app:itemTextColor="@android:color/white"
+        app:menu="@menu/bottom_nav_menu" /> <!-- Reference to the bottom navigation menu -->
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
